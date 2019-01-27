@@ -24,8 +24,8 @@ def multi_floyd(N):
             print(i)
         seed = bin(i)[2:].zfill(d)
         T_1, T_2 = floyd(f, seed)
-        write_bitstring_to_file(T_1, f"./collisions-{d//8}/ex-{i}.A")
-        write_bitstring_to_file(T_2, f"./collisions-{d//8}/ex-{i}.B")
+        write_bitstring_to_file(T_1, "./collisions-{}/ex-{}.A".format(d//8, i))
+        write_bitstring_to_file(T_2, "./collisions-{}/ex-{}.B".format(d//8, i))
     return
 
 
@@ -42,8 +42,8 @@ def brute_force(N):
             int_of_hash[h] = i
         else:
             j = int_of_hash[h]
-            write_bitstring_to_file(bin(i)[2:].zfill(d), f"./collisions-{N}/ex-{c}.A")
-            write_bitstring_to_file(bin(j)[2:].zfill(d), f"./collisions-{N}/ex-{c}.B")
+            write_bitstring_to_file(bin(i)[2:].zfill(d), "./collisions-{}/ex-{}.A".format(N,c))
+            write_bitstring_to_file(bin(j)[2:].zfill(d), "./collisions-{}/ex-{}.B".format(N,c))
             c = c +1
     return
 
