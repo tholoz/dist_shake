@@ -35,7 +35,7 @@ def brute_force(N):
     c = 0
     for i in range(2**d):
         if i%32 == 0:
-            print(f"{i}/{2**d}")
+            print("{}/{}".format(i,2**d))
             # print(int_of_hash)
         h = shake128(bin(i)[2:].zfill(d),d)
         if h not in int_of_hash:
