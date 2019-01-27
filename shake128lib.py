@@ -1,0 +1,273 @@
+import numpy as np
+import sys
+
+# TODO: comment and spec nicely
+
+def state_from_string(S):
+    """S is a string of bits"""
+    b = len(S)
+    w = int(b/25)
+    A = np.zeros((5, 5, w), dtype=int)
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                A[x, y, z] = int(S[w*(5*y+x)+z])
+    return A
+
+def hex_from_bit(s):
+    """Assume correctly padded"""
+    B = len(s)//8
+    res = ""
+    for i in range(B):
+        byte = s[i*8 : (i+1)*8]
+        byte = byte[::-1] # Most significant bit first
+        res = res + hex(int(byte,2))[2:].zfill(2) + " "
+        # res = res + "{0:#0{2}x}".format(int(byte,2),6) + " "
+
+        
+    return res
+
+
+def string_from_state(A):
+    w = len(A[0, 0])
+    array_string = np.zeros(25*w)
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                array_string[w*(5*y+x)+z] = A[x, y, z]
+    S = ""
+    for c in array_string:
+        S = S+str(int(c))
+    return S
+
+def hex_lane_state(A):
+    # Print a 5x5 array of lanes as 64-bits words
+    Ap = [["" for i in range (5)] for j in range(5)]
+    for x in range(5):
+        for y in range(5):
+            s = ""
+            for b in A[x,y]:
+                s = str(int(b)) + s
+            Ap[y][x] = f"{int(s,2):0{16}x}" # y is the column number
+    return Ap
+
+def print_state(A):
+    Ap = hex_lane_state(A)
+    for x in range(5):
+        s = ""
+        for y in range(5):
+            s = s + Ap[x][y] + " "
+        print(s)
+    print("")
+    return
+
+def test_string_state_conversion():
+    s = "01010"*5*64
+    print(f"init string {s}")
+    print(state_from_string(s))
+    print(string_from_state(state_from_string(s)))
+    return
+
+def theta(A):
+    """State array as a numpy array of integers (bits)."""
+    w = A.shape[2]
+
+    C = np.zeros((5, w), dtype=int)
+    for x in range(5):
+        for z in range(w):
+            C[x, z] = A[x, 0, z] ^ A[x, 1, z] ^ A[x,
+                2, z] ^ A[x, 3, z] ^ A[x, 4, z]
+
+    D = np.zeros((5, w), dtype=int)
+    for x in range(5):
+        for z in range(w):
+            D[x, z] = C[(x-1) % 5, z] ^ C[(x+1) % 5, (z-1) % w]
+
+    Ar = np.zeros((5, 5, w), dtype=int)  # Return array
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                Ar[x, y, z] = A[x, y, z] ^ D[x, z]
+
+    return Ar
+
+
+def rho(A):
+    w = A.shape[2]
+    Ar = np.zeros((5, 5, w), dtype=int)  # Return array
+
+    for z in range(w):
+        Ar[0, 0, z] = A[0, 0, z].copy()
+    x = 1
+    y = 0
+    for t in range(24):
+        for z in range(w):
+            Ar[x, y, z] = A[x, y, int((z-(t+1)*(t+2)//2)) % w].copy()
+        old_x = x
+        x = y
+        y = (2*old_x+3*y) % 5
+    return Ar
+
+
+def pi(A):
+    w = A.shape[2]
+    Ar = np.zeros((5, 5, w), dtype=int)  # Return array
+
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                Ar[x, y, z] = A[(x+3*y) % 5, x, z]
+    return Ar
+
+
+def chi(A):
+    w = A.shape[2]
+    Ar = np.zeros((5, 5, w), dtype=int)  # Return array
+
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                Ar[x, y, z] = A[x, y, z] ^ (
+                    (A[(x+1) % 5, y, z] ^ 1) * A[(x+2) % 5, y, z])
+    return Ar
+
+
+def rc(t):
+    if t%255 == 0:
+        return 1
+    R = [1] + [0]*7
+    for i in range(t % 255):
+        # R[0] is the bit on the left
+        R = [0] + R
+        R[0] = R[0]^R[8]
+        R[4] = R[4]^R[8]
+        R[5] = R[5]^R[8]
+        R[6] = R[6]^R[8]
+        R = R[0:8]
+        # print(f"R : {R}")
+    return R[0]
+
+def iota(A, i_r):
+    w = A.shape[2]
+    l = int(np.log2(w))
+    Ar = A.copy() # Return array
+    RC = [0]*w
+    for j in range(l+1):
+        RC[2**j-1] = rc(j+7*i_r)
+
+    for z in range(w):
+        Ar[0,0,z] = Ar[0,0,z]^RC[z]
+    return Ar
+
+def test_rc():
+    for i_r in range(24):
+        RC = [0]*64
+        s = ""
+        for j in range(7):
+            RC[2**j - 1] = rc(j+7*i_r)
+        for b in RC:
+            s = str(b) + s
+        print(f"{int(s,2):0{16}x}")
+    print()
+    return
+
+def test_intermediate_values():
+    s = "0"*1600
+    A = state_from_string(s)
+    for i in range(24):
+        A = theta(A)
+        A = rho(A)
+        A = pi(A)
+        A = chi(A)
+        A = iota(A,i)
+        print(f"After round {i}")
+        print_state(A)
+    s = string_from_state(A)
+    print(hex_from_bit(s))
+    B = state_from_string(s)
+    print_state(B)
+
+    for i in range(24):
+        A = theta(A)
+        A = rho(A)
+        A = pi(A)
+        A = chi(A)
+        A = iota(A,i)
+
+    print(hex_from_bit(string_from_state(A)))
+    return
+
+# test_intermediate_values()
+
+def rnd(A,i_r):
+    return iota(chi(pi(rho(theta(A)))),i_r)
+
+def keccak_p(b, n_r):
+    """Keccak higher order"""
+    def keccak_fun(S):
+        A = state_from_string(S)
+        w = A.shape[2]
+        l = int(np.log2(w))
+
+        for i_r in range(12+2*l-n_r, 12+2*l):
+            A = rnd(A,i_r)
+        Sr = string_from_state(A)
+        return Sr
+
+    return keccak_fun
+
+
+def pad_101(x,m):
+    """Section 5.1."""
+    j = (-m-2)%x
+    P = "1"+"0"*j+"1"
+    return P
+
+def sponge(sponge_params, N, d):
+    f, pad, r, b = sponge_params
+    P = N+pad(r,len(N))
+    n = len(P)//r
+    c = b - r
+    S = "0"*b
+    for i in range(n):
+        pc = P[i*r:(i+1)*r]+("0"*c)
+        # S and pc have the same length
+        xor = ''.join('0' if i == j else '1' for i, j in zip(S,pc))
+        S = f(xor)
+    Z = ""
+    Z = Z+S[0:r]    
+    while len(Z) < d:
+        S = f(S)
+        Z = Z+S[0:r]    
+    return Z[0:d]
+
+def keccak_c(c, N, d):
+    """Section 5.2."""
+    sponge_params = [keccak_p(1600,24), pad_101, 1600-c, 1600]
+    return sponge(sponge_params, N, d)
+
+def shake128(M,d):
+    """Shake XOF 6.2. M in string, d is the number of bits."""
+    return keccak_c(256, M+"1111", d)
+
+def sha3_256(M):
+    return keccak_c(512, M+"01",256)
+
+def test_shake128_intermediate():
+    print(hex_from_bit(shake128("11001",1600)))
+    # print(shak128("0",256))
+
+def write_bitstring_to_file(s,file_name):
+    """The bitstring must have a multiple of 8 bits.
+    Otherwise, it is filled with zeroes on the right until it is complete bytes only."""
+    file = open(file_name, "wb")
+    byte_list = []
+    nb_full_bytes = len(s)//8
+    remaining_bits = len(s) - 8*nb_full_bytes
+    for i in range(nb_full_bytes):
+        byte_list.append(int(s[8*i:(i+1)*8][::-1], 2))
+    if remaining_bits > 0:
+        byte_list.append(int(s[8*nb_full_bytes::][::-1].zfill(8),2))
+    bytes_array = bytearray(byte_list)
+    file.write(bytes_array)
+    return
