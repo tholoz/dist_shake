@@ -5,6 +5,8 @@ def floyd(f, x_0):
     """ f : X -> X """
     s, T, H = 1, f(x_0), f(f(x_0))
     while H != T:
+        if s%100 == 0:
+            print("Step {}".format(s))
         s, T, H = s+1, f(T), f(f(H))
     T_1, T_2 = T, x_0
     T_1_, T_2_ = f(T_1), f(T_2)
@@ -18,14 +20,14 @@ def multi_floyd(N):
         return shake128(x, len(x))
 
     d = N*8
-    print("rbits")
-    for i in range(2**d):
-        if i%16 == 0:
-            print(i)
+    i = 0
+    while i < 2**16:
+        print(i)
         seed = bin(i)[2:].zfill(d)
         T_1, T_2 = floyd(f, seed)
         write_bitstring_to_file(T_1, "./collisions-{}/ex-{}.A".format(d//8, i))
         write_bitstring_to_file(T_2, "./collisions-{}/ex-{}.B".format(d//8, i))
+        i +=1
     return
 
 
@@ -33,7 +35,7 @@ def brute_force(N):
     d = 8*N
     int_of_hash = {}
     c = 0
-    for i in range(2**d):
+    for i in range(2**16):
         if i%32 == 0:
             print("{}/{}".format(i,2**d))
             # print(int_of_hash)
@@ -76,9 +78,14 @@ def main():
     if N == 5:
         brute_force(5)
     if N == -3:
-        mail_address(3,5)
+        mail_address(3,3)
     if N == -4:
-        mail_address(4,5)
+        mail_address(4,3)
+    if N == 6:
+        multi_floyd(4)
+    if N == 7:
+        multi_floyd(5)
+
     return
 
 main()
