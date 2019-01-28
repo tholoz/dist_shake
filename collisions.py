@@ -48,8 +48,37 @@ def brute_force(N):
     return
 
 
+def mail_address(N, d):
+    s = "pierre.tholoniat@polytechnique.edu"
+    mail = "0000111010010110101001100100111001001110101001100111010000101110000101101111011000110110111101100111011010010110100001100010111000000010000011101111011000110110100111100010111010100110110001100001011001110110100101101000111010101110101001100111010010100110001001101010111001010000"
+    hash_t = {}
+    hash_t[shake128(mail, 8*N)] = ""
+    c = 0
+    for i in range(2**(8*d)):
+        if i%32 == 0:
+            print(f"{i}/{2**(8*d)}")
+            # print(hash_t)
+        suffix = bin(i)[2:].zfill(8*d)
+        h = shake128(mail + suffix,8*N)
+        if h not in hash_t:
+            hash_t[h] = suffix
+        else:
+            write_bitstring_to_file(mail + suffix, f"./collisions-mail-{N}/ex-{c}.A")
+            write_bitstring_to_file(mail + hash_t[h], f"./collisions-mail-{N}/ex-{c}.B")
+            c = c + 1
+    return
+
+
 def main():
-    brute_force(3)
+    N = int(sys.argv[1])
+    if N == 4:
+        brute_force(4)
+    if N == 5:
+        brute_force(5)
+    if N == -3:
+        mail_address(3,5)
+    if N == -4:
+        mail_address(4,5)
     return
 
 main()
