@@ -56,15 +56,15 @@ def mail_address(N, d):
     c = 0
     for i in range(2**(8*d)):
         if i%32 == 0:
-            print(f"{}/{}".format(i,2**(8*d)))
+            print("{}/{}".format(i,2**(8*d)))
             # print(hash_t)
         suffix = bin(i)[2:].zfill(8*d)
         h = shake128(mail + suffix,8*N)
         if h not in hash_t:
             hash_t[h] = suffix
         else:
-            write_bitstring_to_file(mail + suffix, f"./collisions-mail-{}/ex-{}.A".format(N,c))
-            write_bitstring_to_file(mail + hash_t[h], f"./collisions-mail-{}/ex-{}.B".format(N,c))
+            write_bitstring_to_file(mail + suffix, "./collisions-mail-{}/ex-{}.A".format(N,c))
+            write_bitstring_to_file(mail + hash_t[h], "./collisions-mail-{}/ex-{}.B".format(N,c))
             c = c + 1
     return
 
