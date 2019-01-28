@@ -40,33 +40,33 @@ def string_from_state(A):
         S = S+str(int(c))
     return S
 
-def hex_lane_state(A):
-    # Print a 5x5 array of lanes as 64-bits words
-    Ap = [["" for i in range (5)] for j in range(5)]
-    for x in range(5):
-        for y in range(5):
-            s = ""
-            for b in A[x,y]:
-                s = str(int(b)) + s
-            Ap[y][x] = f"{int(s,2):0{16}x}" # y is the column number
-    return Ap
+# def hex_lane_state(A):
+#     # Print a 5x5 array of lanes as 64-bits words
+#     Ap = [["" for i in range (5)] for j in range(5)]
+#     for x in range(5):
+#         for y in range(5):
+#             s = ""
+#             for b in A[x,y]:
+#                 s = str(int(b)) + s
+#             Ap[y][x] = f"{int(s,2):0{16}x}" # y is the column number
+#     return Ap
 
-def print_state(A):
-    Ap = hex_lane_state(A)
-    for x in range(5):
-        s = ""
-        for y in range(5):
-            s = s + Ap[x][y] + " "
-        print(s)
-    print("")
-    return
+# def print_state(A):
+#     Ap = hex_lane_state(A)
+#     for x in range(5):
+#         s = ""
+#         for y in range(5):
+#             s = s + Ap[x][y] + " "
+#         print(s)
+#     print("")
+#     return
 
-def test_string_state_conversion():
-    s = "01010"*5*64
-    print(f"init string {s}")
-    print(state_from_string(s))
-    print(string_from_state(state_from_string(s)))
-    return
+# def test_string_state_conversion():
+#     s = "01010"*5*64
+#     print(f"init string {s}")
+#     print(state_from_string(s))
+#     print(string_from_state(state_from_string(s)))
+#     return
 
 def theta(A):
     """State array as a numpy array of integers (bits)."""
@@ -159,43 +159,43 @@ def iota(A, i_r):
         Ar[0,0,z] = Ar[0,0,z]^RC[z]
     return Ar
 
-def test_rc():
-    for i_r in range(24):
-        RC = [0]*64
-        s = ""
-        for j in range(7):
-            RC[2**j - 1] = rc(j+7*i_r)
-        for b in RC:
-            s = str(b) + s
-        print(f"{int(s,2):0{16}x}")
-    print()
-    return
+# def test_rc():
+#     for i_r in range(24):
+#         RC = [0]*64
+#         s = ""
+#         for j in range(7):
+#             RC[2**j - 1] = rc(j+7*i_r)
+#         for b in RC:
+#             s = str(b) + s
+#         print(f"{int(s,2):0{16}x}")
+#     print()
+#     return
 
-def test_intermediate_values():
-    s = "0"*1600
-    A = state_from_string(s)
-    for i in range(24):
-        A = theta(A)
-        A = rho(A)
-        A = pi(A)
-        A = chi(A)
-        A = iota(A,i)
-        print(f"After round {i}")
-        print_state(A)
-    s = string_from_state(A)
-    print(hex_from_bit(s))
-    B = state_from_string(s)
-    print_state(B)
+# def test_intermediate_values():
+#     s = "0"*1600
+#     A = state_from_string(s)
+#     for i in range(24):
+#         A = theta(A)
+#         A = rho(A)
+#         A = pi(A)
+#         A = chi(A)
+#         A = iota(A,i)
+#         print(f"After round {i}")
+#         print_state(A)
+#     s = string_from_state(A)
+#     print(hex_from_bit(s))
+#     B = state_from_string(s)
+#     print_state(B)
 
-    for i in range(24):
-        A = theta(A)
-        A = rho(A)
-        A = pi(A)
-        A = chi(A)
-        A = iota(A,i)
+#     for i in range(24):
+#         A = theta(A)
+#         A = rho(A)
+#         A = pi(A)
+#         A = chi(A)
+#         A = iota(A,i)
 
-    print(hex_from_bit(string_from_state(A)))
-    return
+#     print(hex_from_bit(string_from_state(A)))
+#     return
 
 # test_intermediate_values()
 
